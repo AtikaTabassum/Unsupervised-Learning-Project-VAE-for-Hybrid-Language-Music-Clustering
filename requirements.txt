@@ -1,0 +1,35 @@
+# Requirements for 425-project (Audio + Lyrics Clustering)
+# Versions chosen to be stable and mutually compatible as of mid-2024.
+
+numpy==1.25.1
+pandas==2.2.2
+scipy==1.11.3
+scikit-learn==1.2.2
+matplotlib==3.7.2
+seaborn==0.12.2
+pillow==9.5.0
+
+# PyTorch (choose appropriate build for your CUDA version; CPU-only works too)
+torch==2.2.0
+torchvision==0.15.2
+torchaudio==2.2.2
+
+# Audio / signal processing
+librosa==0.10.0
+soundfile==0.12.1
+
+# NLP / embeddings
+sentence-transformers==2.2.2
+transformers==4.33.2
+sentencepiece==0.1.99
+
+# Utilities
+tqdm==4.66.1
+joblib==1.2.0
+
+umap-learn==0.5.4  # optional
+
+# For image handling in notebooks
+imageio==2.28.1
+
+# Pin versions for reproducibility; feel free to relax ranges for local development.

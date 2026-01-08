@@ -1,75 +1,210 @@
-# Project: Audio + Lyrics Clustering (425-project)
+# Music Clustering with Variational Autoencoders (425-project)
 
-This repository contains code and notebooks for extracting audio/lyrics features, training VAE/AEs, and comparing clustering methods across three task recipes (easy, medium, hard).
-
----
-
-## Quick start
-
-1. Create a Python environment (recommended Python 3.9+ / 3.11):
-
-   pip install -r requirements.txt
-
-   If `requirements.txt` is not available, install core packages:
-
-   pip install torch torchvision torchaudio librosa scikit-learn matplotlib sentence-transformers tqdm pandas seaborn
-
-2. Quick smoke runs (small SAMPLE_SIZE recommended for fast checks):
-
-   - Easy: SAMPLE_SIZE=20 EPOCHS=1 python run_easy_task.py
-   - Medium: SAMPLE_SIZE=20 EPOCHS=1 python run_medium_task.py
-   - Hard (resolve-only path check): RESOLVE_PATHS_ONLY=1 python run_hard_task.py
-
-Environment variables supported:
-- SAMPLE_SIZE (limit dataset for quick tests)
-- EPOCHS (override training epochs)
-- BATCH_SIZE, LR, BETA (training hyperparameters)
-- N_CLUSTERS (for medium task when no labels are used)
-- RESOLVE_PATHS_ONLY (1 = only resolve file paths without feature extraction)
+This repository implements an unsupervised pipeline to cluster hybrid-language music tracks using Variational Autoencoders (VAEs). It extracts audio and lyrics features, trains models at three complexity levels (easy / medium / hard), evaluates clustering quality against multiple baselines, and produces visuals and reconstruction artifacts.
 
 ---
 
-## Top-level layout
+## Project overview
 
-- `run_easy_task.py` — easy recipe (FC-VAE on mel-spectrograms): trains VAE, runs KMeans on latent, PCA+KMeans baseline, t‑SNE visualization. Outputs to `results/`.
-- `run_medium_task.py` — medium recipe (ConvVAE multimodal): trains conv VAE on audio+lyrics, runs KMeans / Agglomerative / DBSCAN on latent, includes **PCA (hybrid)** baseline (flattened audio + lyrics). Uses t‑SNE for visualization and writes consolidated `clusters_medium.csv`.
-- `run_hard_task.py` — hard recipe (conditional/Beta-VAE): trains Beta-VAE with optional genre conditioning, saves reconstructions, computes multiple baselines (AE, PCA, spectral), and writes indexes/metrics.
+Three task recipes are provided:
 
-- `exploratory.ipynb` — general exploratory notebook (EDA and preprocessing templates).
-- `notebooks/exploratory.ipynb` notebooks that reproduce the key steps from the corresponding `run_*` scripts and show smoke-run examples and result previews.
+- **Easy Task** — VAE on mel-spectrograms (compact experiment for fast iteration). Primary baseline: PCA + KMeans.
+- **Medium Task** — ConvVAE on hybrid audio + lyrics features (multimodal). Baselines: PCA (hybrid) and clustering algorithms (KMeans, Agglomerative, DBSCAN).
+- **Hard Task** — Beta / conditional VAE with reconstructions and more extensive baselines (AE, PCA, spectral).
 
-- `data/` — dataset folder
-  - `metadata.csv` — dataset metadata (audio_path, lyrics_path, optional columns such as genre, language, etc.)
-  - `audio/` and `lyrics/` subfolders with the raw files
-
-- `results/` — outputs from experiments
-  - `clustering_metrics_{easy,medium,hard}.csv` — full metric tables per method
-  - `clustering_indices_{easy,medium,hard}.csv` — compact index summaries (per-user spec)
-  - `latent_visualization/{easy,medium,hard}/` — t‑SNE images and comparison figures
-  - `reconstructions/hard/` — saved VAE reconstructions for hard
-  - `clusters_medium.csv`, `clusters_hard.csv` — consolidated cluster assignments (original metadata columns + cluster_* columns)
-
-- `src/` — source modules
-  - `dataset_easy.py`, `dataset_medium.py` — feature extraction helpers (audio mel-spectrograms, lyrics embeddings)
-  - `vae_easy.py`, `convae_medium.py`, `convae_hard.py`, `MultiModalBetaVAE` — model implementations
-  - `clustering_easy.py`, `clustering_medium.py`, `clustering_hard.py` — clustering wrappers and helpers (KMeans, Agglomerative, DBSCAN, PCA+KMeans)
-  - `evaluation_*.py` — per-task evaluation metric calculations
-  - `visualization_hard.py` — latent visualizations and reconstruction helpers.
+Each task produces clustering metrics, compact indices, t‑SNE visualizations, and (for hard) reconstruction images.
 
 ---
 
-## Design notes & conventions
+## Repository structure
 
-- t‑SNE is used as the default 2D projection for visuals; perplexity adapts to sample size automatically.
-- Easy task: primary comparison is VAE latent + KMeans and PCA + KMeans baseline; metrics for Easy include Silhouette and Calinski–Harabasz indices.
-- Medium task: **no** genre-based distribution plots and no use of genre labels for clustering by default — set `N_CLUSTERS` to control k when labels are absent.
-- Hard task: includes reconstructions, per genre distributions (if metadata present), and comparisons among VAE, AE, PCA, and spectral baselines.
+```
+425-project/
+├── data/                      # Dataset (metadata.csv, audio/, lyrics/)
+├── notebooks/                 # Exploratory notebooks (exploratory.ipynb
+├── results/                   # Outputs (metrics CSVs, visualizations, reconstructions)
+│   ├── clustering_metrics_*.csv
+│   ├── clustering_indices_*.csv
+│   ├── latent_visualization/
+│   │   ├── easy/
+│   │   ├── medium/
+│   │   └── hard/
+│   └── reconstructions/hard/
+├── run_easy_task.py           # Easy recipe (VAE on mel-spectrograms)
+├── run_medium_task.py         # Medium recipe (ConvVAE multimodal, PCA_hybrid baseline)
+├── run_hard_task.py           # Hard recipe (Beta/conditional VAE, reconstructions)
+├── src/                       # Source modules (datasets, models, clustering, evaluation)
+└── README.md                  # This file
+```
 
 ---
 
-## Reproducing & extending experiments
+## Installation & Requirements
 
-- To reproduce results, start with a small SAMPLE_SIZE for debugging, run each `run_*_task.py`, inspect CSVs under `results/`, and iterate hyperparameters via env vars.
-- To add a new baseline or metric: add the computation in the corresponding `run_*_task.py` and append to the `metrics` list — the code writes metrics CSVs and indices automatically.
+1. Create and activate a Python virtual environment (recommended Python 3.9+ / 3.11):
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+```
+
+2. Install pinned dependencies from `requirements.txt`:
+
+```powershell
+pip install -r requirements.txt
+```
+
+3. PyTorch (GPU builds):
+
+- If you plan to use a GPU, install a PyTorch wheel matching your CUDA version. Visit https://pytorch.org/get-started/locally and choose the correct command. Example for CUDA 12.2:
+
+```powershell
+pip install --index-url https://download.pytorch.org/whl/cu122 torch==2.2.0 torchvision==0.15.2 torchaudio==2.2.2
+```
+
+4. Verify installation (quick check):
+
+```python
+python -c "import torch, librosa, pandas, sklearn; print('OK', torch.__version__)"
+```
 
 ---
+
+## Requirements file
+
+A pinned `requirements.txt` is included at the repository root (recommended for reproducibility). Key packages include:
+
+- `torch`, `torchvision`, `torchaudio` (PyTorch 2.x)
+- `librosa`, `soundfile`
+- `sentence-transformers` (lyrics embeddings)
+- `scikit-learn`, `numpy`, `pandas`, `matplotlib`, `seaborn`
+
+You can find the full pinned versions in `requirements.txt`.
+
+---
+
+## Data layout & quick checks
+
+- Required metadata file: `data/metadata.csv` (rows should include audio and lyrics paths or identifiers).
+- Audio files: `data/audio/` (may contain subfolders, e.g., `00_mp3/`)
+- Lyrics files: `data/lyrics/` (optional; used by medium/hard tasks)
+
+Quick path sanity check (fast, no heavy feature extraction):
+
+```powershell
+$env:RESOLVE_PATHS_ONLY=1; python run_hard_task.py
+```
+
+Or in the notebook, use the loader in `src.dataset_medium.load_multimodal_features(resolve_paths_only=True)` to validate paths.
+
+---
+
+## Running the tasks (examples)
+
+Run with PowerShell environment variables (examples):
+
+- Easy (quick smoke):
+```powershell
+$env:SAMPLE_SIZE=20; $env:EPOCHS=1; python run_easy_task.py
+```
+
+- Medium (quick smoke):
+```powershell
+$env:SAMPLE_SIZE=20; $env:EPOCHS=1; python run_medium_task.py
+```
+
+- Hard (path check):
+```powershell
+$env:RESOLVE_PATHS_ONLY=1; python run_hard_task.py
+```
+
+For full experiments remove `SAMPLE_SIZE` and increase `EPOCHS` (the hard task default `EPOCHS` is set to 100 for stability).
+
+---
+
+## Outputs & naming conventions
+
+Primary output locations (produced by `run_*_task.py` scripts):
+
+- `results/clustering_metrics_{easy,medium,hard}.csv` — full per-method metrics (rows = methods/configs)
+- `results/clustering_indices_{easy,medium,hard}.csv` — compact index summaries per user specification
+- `results/latent_visualization/{easy,medium,hard}/` — t‑SNE images and per-method comparison figures
+- `results/reconstructions/hard/` — saved reconstruction images for the hard task
+- `results/clusters_medium.csv`, `results/clusters_hard.csv` — consolidated per-sample cluster labels appended to metadata
+
+---
+
+## Metrics computed (by task)
+
+- **Easy**: Silhouette, Calinski–Harabasz
+- **Medium**: Silhouette, Davies–Bouldin, ARI (if labels available)
+- **Hard**: Silhouette, NMI, ARI, Purity
+
+All metrics are saved into the `results/` CSV files listed above.
+
+---
+
+## Visualizations & how to preview them (code snippet)
+
+The `notebooks/exploratory.ipynb` includes cells that automatically load metrics and preview images. Example code used in the notebook:
+
+```python
+import glob, os, pandas as pd
+# load metrics
+metrics = pd.read_csv('results/clustering_metrics_medium.csv')
+# list visuals
+viz_files = sorted(glob.glob('results/latent_visualization/medium/*.png'))
+# display first visual
+from matplotlib import pyplot as plt
+img = plt.imread(viz_files[0]); plt.imshow(img); plt.axis('off')
+```
+
+You can also view reconstructions:
+
+```python
+recon_files = sorted(glob.glob('results/reconstructions/hard/*.png'))
+```
+
+---
+
+## Models & code pointers
+
+- `src/dataset_medium.py` — multimodal loader used by `run_medium_task.py` (supports `resolve_paths_only` mode)
+- `src/vae_easy.py`, `src/convae_medium.py`, `src/convae_hard.py` — model implementations
+- `src/clustering_*` and `src/evaluation_*` — clustering wrappers and metric computations
+- Visualization helpers: `src/visualization_hard.py`
+
+If you need to add a new baseline or modify model hyperparameters, update the corresponding `run_*_task.py` script and re-run.
+
+---
+
+## Troubleshooting & tips
+
+- Install `sentence-transformers` if medium/hard tasks fail due to missing lyrics embeddings: `pip install sentence-transformers`.
+- DBSCAN often produces a single cluster on small samples — some metrics will be `NaN`; the code guards against crashes.
+- If you see CUDA OOM, reduce `BATCH_SIZE` in env vars or script defaults.
+- Use `SAMPLE_SIZE` for fast iterative debugging before running full experiments.
+
+---
+
+## Extending & tests
+
+- To add a baseline: implement it in `src/` and call it from `run_*_task.py` scripts, adding metric computation to `evaluation_*` modules.
+- Add smoke tests that run a tiny sample (`SAMPLE_SIZE=5`, `EPOCHS=1`) and assert that `results/clustering_indices_*.csv` and at least one visualization PNG exist.
+
+---
+## Project Deliverables
+
+1. GitHub Repository with organized code
+2. Implementation of Easy, Medium, and Hard tasks
+3. Comprehensive evaluation metrics
+4. Visualization scripts
+5. NeurIPS-style paper report 
+
+## License
+
+This project is for educational/research purposes.
+
+## Contact
+
+For questions or issues, please open an issue in the repository.
