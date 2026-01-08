@@ -36,7 +36,7 @@ Environment variables supported:
 - `run_hard_task.py` — hard recipe (conditional/Beta-VAE): trains Beta-VAE with optional genre conditioning, saves reconstructions, computes multiple baselines (AE, PCA, spectral), and writes indexes/metrics.
 
 - `exploratory.ipynb` — general exploratory notebook (EDA and preprocessing templates).
-- `notebooks/easy.ipynb`, `notebooks/medium.ipynb`, `notebooks/hard.ipynb` — task-specific notebooks that reproduce the key steps from the corresponding `run_*` scripts and show smoke-run examples and result previews.
+- `notebooks/exploratory.ipynb` notebooks that reproduce the key steps from the corresponding `run_*` scripts and show smoke-run examples and result previews.
 
 - `data/` — dataset folder
   - `metadata.csv` — dataset metadata (audio_path, lyrics_path, optional columns such as genre, language, etc.)
@@ -54,19 +54,16 @@ Environment variables supported:
   - `vae_easy.py`, `convae_medium.py`, `convae_hard.py`, `MultiModalBetaVAE` — model implementations
   - `clustering_easy.py`, `clustering_medium.py`, `clustering_hard.py` — clustering wrappers and helpers (KMeans, Agglomerative, DBSCAN, PCA+KMeans)
   - `evaluation_*.py` — per-task evaluation metric calculations
-  - `visualization_hard.py` — latent visualizations and reconstruction helpers
-
-- `scripts/` — utility scripts (file checks, cluster consolidation)
-- `tests/` — basic integration / unit tests (e.g., `test_integration.py`)
+  - `visualization_hard.py` — latent visualizations and reconstruction helpers.
 
 ---
 
 ## Design notes & conventions
 
 - t‑SNE is used as the default 2D projection for visuals; perplexity adapts to sample size automatically.
-- Medium task: **no** genre-based distribution plots and no use of genre labels for clustering by default — set `N_CLUSTERS` to control k when labels are absent.
 - Easy task: primary comparison is VAE latent + KMeans and PCA + KMeans baseline; metrics for Easy include Silhouette and Calinski–Harabasz indices.
-- Hard task: includes reconstructions, per-language/genre distributions (if metadata present), and comparisons among VAE, AE, PCA, and spectral baselines.
+- Medium task: **no** genre-based distribution plots and no use of genre labels for clustering by default — set `N_CLUSTERS` to control k when labels are absent.
+- Hard task: includes reconstructions, per genre distributions (if metadata present), and comparisons among VAE, AE, PCA, and spectral baselines.
 
 ---
 
@@ -75,3 +72,4 @@ Environment variables supported:
 - To reproduce results, start with a small SAMPLE_SIZE for debugging, run each `run_*_task.py`, inspect CSVs under `results/`, and iterate hyperparameters via env vars.
 - To add a new baseline or metric: add the computation in the corresponding `run_*_task.py` and append to the `metrics` list — the code writes metrics CSVs and indices automatically.
 
+---
