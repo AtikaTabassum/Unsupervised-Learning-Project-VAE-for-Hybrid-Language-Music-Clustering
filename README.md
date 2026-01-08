@@ -35,6 +35,7 @@ Each task produces clustering metrics, compact indices, t‑SNE visualizations, 
 ├── run_hard_task.py           # Hard recipe (Beta/conditional VAE, reconstructions)
 ├── src/                       # Source modules (datasets, models, clustering, evaluation)
 └── README.md                  # This file
+└── requirements.txt                
 ```
 
 ---
@@ -208,3 +209,4 @@ This project is for educational/research purposes.
 ## Contact
 
 For questions or issues, please open an issue in the repository.
+
