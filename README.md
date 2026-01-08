@@ -75,10 +75,3 @@ Environment variables supported:
 - To reproduce results, start with a small SAMPLE_SIZE for debugging, run each `run_*_task.py`, inspect CSVs under `results/`, and iterate hyperparameters via env vars.
 - To add a new baseline or metric: add the computation in the corresponding `run_*_task.py` and append to the `metrics` list — the code writes metrics CSVs and indices automatically.
 
----
-
-If you'd like, I can:
-- Add annotated metric values on the comparison images for easier visual comparison ✅
-- Add unit tests ensuring index CSVs and comparison images are generated after a smoke run ✅
-
-If you want the README wording adjusted or more detail for any file, tell me which parts to expand.
